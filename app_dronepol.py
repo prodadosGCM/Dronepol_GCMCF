@@ -847,18 +847,26 @@ elif menu == "📦 Cautela de Uso":
                     df = carregar_aba("cautelas")
                     novo_id = gerar_id(df)
                     SHEETS["cautelas"].append_row([
-                        novo_id, id_drone, drow["matricula_aeronave"], drow["modelo"], drow["numero_serie"],
-                        data_obj.strftime("%d/%m/%Y"), hora_fmt, normalizar_texto(finalidade),
-                        normalizar_texto(operador_nome), normalizar_texto(operador_matricula),
-                        normalizar_texto(responsavel_entrega), "", "", "", "", "ABERTA",
-                        normalizar_texto(observacoes), st.session_state["nome_usuario"],
-                        datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S")
+                        int(novo_id),
+                        int(id_drone),
+                        str(drow["matricula_aeronave"]),
+                        str(drow["modelo"]),
+                        str(drow["numero_serie"]),
+                        str(data_obj.strftime("%d/%m/%Y")),
+                        str(hora_fmt),
+                        str(normalizar_texto(finalidade)),
+                        str(normalizar_texto(operador_nome)),
+                        str(normalizar_texto(operador_matricula)),
+                        str(normalizar_texto(responsavel_entrega)),
+                        "",
+                        "",
+                        "",
+                        "",
+                        "ABERTA",
+                        str(normalizar_texto(observacoes)),
+                        str(st.session_state["nome_usuario"]),
+                        str(datetime.now(TZ).strftime("%d/%m/%Y %H:%M:%S"))
                     ])
-                    atualizar_status_drone(id_drone, STATUS_CAUTELADO)
-                    registrar_log(st.session_state["nome_usuario"], "CAUTELA DRONE", f"DRONE {drow['matricula_aeronave']} | OPERADOR {operador_nome}")
-                    limpar_cache("cautelas")
-                    st.success("✅ Cautela registrada com sucesso.")
-
 
 # =====================================================
 # DEVOLUÇÃO
