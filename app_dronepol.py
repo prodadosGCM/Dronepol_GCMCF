@@ -573,24 +573,46 @@ if not st.session_state["logado"]:
     st.stop()
 
 
-if st.session_state["primeiro_acesso"]:
+if bool(st.session_state.get("primeiro_acesso", False)):
     st.warning("⚠️ Por segurança, altere sua senha inicial.")
-    with st.form("primeiro_acesso"):
-        nova1 = st.text_input("Nova senha", type="password")
-        nova2 = st.text_input("Confirme a nova senha", type="password")
-        if st.form_submit_button("Atualizar senha"):
-            if nova1 != nova2:
-                st.error("As senhas não coincidem.")
-            elif len(nova1) < 4:
-                st.error("A senha deve ter pelo menos 4 caracteres.")
-            else:
-                alterar_senha(st.session_state["usuario_id"], nova1)
-                st.session_state["primeiro_acesso"] = False
-                st.success("Senha atualizada com sucesso.")
-                time_mod.sleep(1)
-                st.rerun()
-    st.stop()
 
+    with st.form(key="form_primeiro_acesso"):
+        nova1 = st.text_input(
+            "Nova senha",
+            type="password",
+            key="nova_senha_1"
+        )
+
+        nova2 = st.text_input(
+            "Confirme a nova senha",
+            type="password",
+            key="nova_senha_2"
+        )
+
+        enviar = st.form_submit_button(
+            "Atualizar senha",
+            use_container_width=True
+        )
+
+    if enviar:
+        if nova1 != nova2:
+            st.error("As senhas não coincidem.")
+
+        elif len(nova1) < 4:
+            st.error("A senha deve ter pelo menos 4 caracteres.")
+
+        else:
+            alterar_senha(st.session_state["usuario_id"], nova1)
+
+            st.session_state.update({
+                "primeiro_acesso": False
+            })
+
+            st.success("Senha atualizada com sucesso.")
+            time_mod.sleep(1)
+            st.rerun()
+
+    st.stop()
 
 # =====================================================
 # SIDEBAR / MENU
