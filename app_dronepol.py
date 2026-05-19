@@ -201,7 +201,7 @@ def conectar_planilha():
         client = gspread.authorize(creds)
 
         # Configure em .streamlit/secrets.toml:
-        # spreadsheet_key = "COLE_AQUI_O_ID_DA_PLANILHA"
+        # spreadsheet_key = "1aWIkmMQg6R2HBfE9eYcl5VBZO35PLpEQzYMgBbJAzfA"
         spreadsheet_key = st.secrets.get("spreadsheet_key", "")
         if not spreadsheet_key:
             st.error("Informe spreadsheet_key no arquivo .streamlit/secrets.toml.")
