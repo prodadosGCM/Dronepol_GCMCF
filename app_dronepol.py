@@ -10,6 +10,7 @@ from io import BytesIO
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import simpleSplit
+from streamlit_option_menu import option_menu
 
 
 # =====================================================
@@ -617,41 +618,133 @@ if bool(st.session_state.get("primeiro_acesso", False)):
 # =====================================================
 # SIDEBAR / MENU
 # =====================================================
-st.sidebar.success(f"Logado como: {st.session_state['nome_usuario']}")
-st.sidebar.write(f"Perfil: {st.session_state['tipo_usuario'].upper()}")
-if st.sidebar.button("Sair / Logout"):
-    logout()
+with st.sidebar:
 
-perfil = st.session_state["tipo_usuario"]
+    st.markdown("""
+    <div style='text-align:center;padding:10px'>
+        <h2 style='margin-bottom:0;color:#0f172a;'>🚔 SIG-GCM</h2>
+        <p style='color:gray;font-size:14px;'>Centro de Comando</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-menus_admin = [
-    "📊 Dashboard",
-    "🚁 Cadastro de Drone",
-    "📦 Cautela de Uso",
-    "🔁 Devolução de Drone",
-    "✅ Inspeção de Voo",
-    "🛡️ Relatório / Avaliação Operacional",
-    "🔎 Consulta Geral",
-    "🖨️ Relatórios PDF",
-    "👤 Cadastrar Usuário",
-    "📋 Gerenciar Usuários",
-    "🔐 Minha Conta",
-    "📜 Log de Auditoria"
-]
+    perfil = st.session_state["tipo_usuario"]
 
-menus_agente = [
-    "📊 Dashboard",
-    "📦 Cautela de Uso",
-    "🔁 Devolução de Drone",
-    "✅ Inspeção de Voo",
-    "🛡️ Relatório / Avaliação Operacional",
-    "🔎 Consulta Geral",
-    "🖨️ Relatórios PDF",
-    "🔐 Minha Conta"
-]
+    if perfil in ["admin", "gestor"]:
 
-menu = st.sidebar.radio("Menu Principal", menus_admin if perfil in ["admin", "gestor"] else menus_agente)
+        menu = option_menu(
+            menu_title=None,
 
+            options=[
+                "Dashboard",
+                "Ocorrências",
+                "Cautelas",
+                "Inspeções",
+                "Relatórios",
+                "PDF",
+                "Usuários",
+                "Auditoria",
+                "Minha Conta",
+                "Logout"
+            ],
+
+            icons=[
+                "speedometer2",
+                "clipboard-data",
+                "box-seam",
+                "check2-square",
+                "shield-check",
+                "file-earmark-pdf",
+                "people",
+                "journal-text",
+                "person-circle",
+                "box-arrow-right"
+            ],
+
+            menu_icon="cast",
+            default_index=0,
+
+            styles={
+                "container": {
+                    "padding": "0!important",
+                    "background-color": "#ffffff",
+                },
+
+                "icon": {
+                    "color": "#0f172a",
+                    "font-size": "18px"
+                },
+
+                "nav-link": {
+                    "font-size": "16px",
+                    "text-align": "left",
+                    "margin": "4px",
+                    "padding": "12px",
+                    "border-radius": "12px",
+                    "--hover-color": "#f1f5f9",
+                },
+
+                "nav-link-selected": {
+                    "background-color": "#eab308",
+                    "color": "black",
+                    "font-weight": "600",
+                },
+            }
+        )
+
+    else:
+
+        menu = option_menu(
+            menu_title=None,
+
+            options=[
+                "Dashboard",
+                "Cautelas",
+                "Inspeções",
+                "Relatórios",
+                "PDF",
+                "Minha Conta",
+                "Logout"
+            ],
+
+            icons=[
+                "speedometer2",
+                "box-seam",
+                "check2-square",
+                "shield-check",
+                "file-earmark-pdf",
+                "person-circle",
+                "box-arrow-right"
+            ],
+
+            default_index=0,
+
+            styles={
+                "container": {
+                    "padding": "0!important",
+                    "background-color": "#ffffff",
+                },
+
+                "icon": {
+                    "color": "#0f172a",
+                    "font-size": "18px"
+                },
+
+                "nav-link": {
+                    "font-size": "16px",
+                    "text-align": "left",
+                    "margin": "4px",
+                    "padding": "12px",
+                    "border-radius": "12px",
+                    "--hover-color": "#f1f5f9",
+                },
+
+                "nav-link-selected": {
+                    "background-color": "#eab308",
+                    "color": "black",
+                    "font-weight": "600",
+                },
+            }
+        )
 
 # =====================================================
 # HELPERS DE DRONE
@@ -706,7 +799,7 @@ def card_metrica(titulo, valor):
 # =====================================================
 # DASHBOARD
 # =====================================================
-if menu == "📊 Dashboard":
+if menu == "Dashboard":
     st.subheader("Dashboard Operacional")
 
     df_drones = carregar_aba("drones")
@@ -815,7 +908,7 @@ elif menu == "🚁 Cadastro de Drone":
 # =====================================================
 # CAUTELA
 # =====================================================
-elif menu == "📦 Cautela de Uso":
+elif menu == "Cautelas":
     st.subheader("Cautela de Drone – Responsabilidade de Uso")
 
     opcoes = drone_opcoes(STATUS_DISPONIVEL)
