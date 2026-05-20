@@ -1,9 +1,9 @@
-streamlit
-gspread
-pandas
-google-auth
+streamlit>=1.35.0
+gspread>=6.0.0
+pandas>=2.0.0
+google-auth>=2.0.0
 google-auth-oauthlib
 google-auth-httplib2
-reportlab
+reportlab>=4.0.0
 openpyxl
-streamlit-option-menu
+streamlit-option-menu>=0.3.12
