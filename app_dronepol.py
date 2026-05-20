@@ -332,20 +332,35 @@ def conectar_planilha():
         st.error(f"Erro Google Sheets: {e}")
         st.stop()
 
-def obter_aba(nome):
+# Cache de abas — lazy: só abre/cria quando primeira vez usada
+_sheets_cache: dict = {}
+
+def obter_aba(nome: str):
+    """Retorna a worksheet, criando-a se não existir. Usa cache em memória."""
+    if nome in _sheets_cache:
+        return _sheets_cache[nome]
     p = conectar_planilha()
     try:
-        return p.worksheet(nome)
-    except:
-        aba = p.add_worksheet(title=nome, rows=3000, cols=max(len(ABAS[nome]),10))
+        aba = p.worksheet(nome)
+    except Exception:
+        import time as _t
+        _t.sleep(2)          # respeita rate-limit antes de criar
+        aba = p.add_worksheet(title=nome, rows=3000, cols=max(len(ABAS[nome]), 10))
+        _t.sleep(1)
         aba.append_row(ABAS[nome])
-        return aba
+    _sheets_cache[nome] = aba
+    return aba
 
-SHEETS = {n: obter_aba(n) for n in ABAS}
+# Classe para manter a sintaxe SHEETS["aba"] funcionando
+class _SheetsProxy:
+    def __getitem__(self, nome):
+        return obter_aba(nome)
+
+SHEETS = _SheetsProxy()
 
 @st.cache_data(ttl=60)
 def carregar_aba(nome):
-    df = pd.DataFrame(SHEETS[nome].get_all_records())
+    df = pd.DataFrame(obter_aba(nome).get_all_records())
     if not df.empty: df.columns = df.columns.str.strip().str.lower()
     return df
 
@@ -353,23 +368,33 @@ def limpar_cache(): carregar_aba.clear()
 
 def registrar_log(usuario, acao, detalhes=""):
     d, h = agora_str()
-    SHEETS["log_auditoria"].append_row([d, h, str(usuario).upper(), str(acao).upper(), str(detalhes).upper()])
+    obter_aba("log_auditoria").append_row([d, h, str(usuario).upper(), str(acao).upper(), str(detalhes).upper()])
     limpar_cache()
 
-# bootstrap admin
+# bootstrap admin — executado apenas uma vez por sessão
 def bootstrap_admin():
-    df = pd.DataFrame(SHEETS["usuarios"].get_all_records())
-    if df.empty:
-        SHEETS["usuarios"].append_row([1,"admin","admin","ADMINISTRADOR","","",make_hashes("admin123"),1,STATUS_ATIVO])
-        return
-    df.columns = df.columns.str.strip().str.lower()
-    existe = not df[(df["tipo_usuario"].str.lower()=="admin")&(df["login"].str.lower()=="admin")&(df["status"].str.upper()==STATUS_ATIVO)].empty
-    if not existe:
-        ids = pd.to_numeric(df.get("id",pd.Series(dtype=float)),errors="coerce").dropna()
-        nid = int(ids.max())+1 if not ids.empty else 1
-        SHEETS["usuarios"].append_row([nid,"admin","admin","ADMINISTRADOR","","",make_hashes("admin123"),1,STATUS_ATIVO])
+    try:
+        aba = obter_aba("usuarios")
+        df = pd.DataFrame(aba.get_all_records())
+        if df.empty:
+            aba.append_row([1,"admin","admin","ADMINISTRADOR","","",make_hashes("admin123"),1,STATUS_ATIVO])
+            return
+        df.columns = df.columns.str.strip().str.lower()
+        existe = not df[
+            (df["tipo_usuario"].str.lower()=="admin") &
+            (df["login"].str.lower()=="admin") &
+            (df["status"].str.upper()==STATUS_ATIVO)
+        ].empty
+        if not existe:
+            ids = pd.to_numeric(df.get("id", pd.Series(dtype=float)), errors="coerce").dropna()
+            nid = int(ids.max()) + 1 if not ids.empty else 1
+            aba.append_row([nid,"admin","admin","ADMINISTRADOR","","",make_hashes("admin123"),1,STATUS_ATIVO])
+    except Exception as e:
+        st.warning(f"Bootstrap admin: {e}")
 
-bootstrap_admin()
+if "bootstrap_done" not in st.session_state:
+    bootstrap_admin()
+    st.session_state["bootstrap_done"] = True
 
 # ─────────────────────────────────────────
 # USUÁRIOS
