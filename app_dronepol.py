@@ -167,39 +167,18 @@ div[data-testid="stForm"] {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
 
-/* ── botão nativo de colapso da sidebar ── */
-/* Esconde o botão nativo do Streamlit */
+/* ── botão nativo de colapso — mantém visível mas estilizado ── */
+[data-testid="stSidebarCollapseButton"] button,
 [data-testid="collapsedControl"] {
-    display: none !important;
+    background: #1e293b !important;
+    color: #94a3b8 !important;
+    border: 1px solid #334155 !important;
+    border-radius: 0 8px 8px 0 !important;
 }
-button[kind="headerNoPadding"] {
-    display: none !important;
-}
-
-/* ── toggle flutuante customizado ── */
-#sidebar-toggle-btn {
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 9999;
-    width: 22px;
-    height: 48px;
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-left: none;
-    border-radius: 0 8px 8px 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 13px;
-    transition: background 0.2s, color 0.2s;
-    box-shadow: 2px 0 8px rgba(0,0,0,.25);
-}
-#sidebar-toggle-btn:hover {
-    background: #334155;
-    color: #eab308;
+[data-testid="stSidebarCollapseButton"] button:hover,
+[data-testid="collapsedControl"]:hover {
+    background: #334155 !important;
+    color: #eab308 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -530,55 +509,12 @@ def topbar():
     nome = st.session_state.get("nome_usuario","")
     d, h = agora_str()
     perfil_label = {"admin":"Administrador","gestor":"Gestor","agente":"Piloto/Agente"}.get(perfil,perfil.upper())
-    # Botão toggle e JS para controlar colapso nativo da sidebar
     st.markdown(f"""
     <div class="topbar">
         <span class="topbar-left">&#x1F694; SIG-GCM &nbsp;&middot;&nbsp; Cabo Frio / RJ</span>
         <span class="topbar-right">{nome} &nbsp;&middot;&nbsp; {perfil_label} &nbsp;&middot;&nbsp; {d} {h}</span>
-    </div>
-    <div id="sb-toggle" title="Recolher / Expandir menu" onclick="sbToggle()" style="
-        position:fixed;top:50%;transform:translateY(-50%);left:0;z-index:9999;
-        width:22px;height:48px;background:#1e293b;border:1px solid #334155;border-left:none;
-        border-radius:0 8px 8px 0;cursor:pointer;display:flex;align-items:center;
-        justify-content:center;color:#94a3b8;font-size:14px;font-weight:700;
-        box-shadow:2px 0 8px rgba(0,0,0,.3);user-select:none;
-        transition:background .15s,color .15s;">&#8250;</div>
-    <script>
-    (function(){{
-        function findBtn(){{
-            var pd = window.parent.document;
-            return pd.querySelector('[data-testid="stSidebarCollapseButton"] button') ||
-                   pd.querySelector('button[aria-label="Close sidebar"]') ||
-                   pd.querySelector('button[aria-label="Open sidebar"]') ||
-                   pd.querySelector('[data-testid="collapsedControl"]');
-        }}
-        function isCollapsed(){{
-            var sb = window.parent.document.querySelector('[data-testid="stSidebar"]');
-            if(!sb) return false;
-            var w = sb.getBoundingClientRect().width;
-            return w < 50;
-        }}
-        function syncIcon(){{
-            var el = document.getElementById('sb-toggle');
-            if(!el) return;
-            if(isCollapsed()){{ el.innerHTML='&#8250;'; el.style.left='0'; }}
-            else {{ el.innerHTML='&#8249;'; el.style.left=''; }}
-        }}
-        window.sbToggle = function(){{
-            var btn = findBtn();
-            if(btn){{ btn.click(); setTimeout(syncIcon,350); }}
-        }};
-        var hov = document.getElementById('sb-toggle');
-        if(hov){{
-            hov.onmouseenter=function(){{this.style.background='#334155';this.style.color='#eab308';}};
-            hov.onmouseleave=function(){{this.style.background='#1e293b';this.style.color='#94a3b8';}};
-        }}
-        setTimeout(syncIcon, 400);
-        // Recheck após renders do Streamlit
-        setInterval(syncIcon, 1500);
-    }})();
-    </script>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
+
 
 def footer():
     st.markdown("""
