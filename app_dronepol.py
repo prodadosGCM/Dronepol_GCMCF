@@ -25,183 +25,415 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ─────────────────────────────────────────
-# TEMA / CSS  (espelha o visual React)
-# ─────────────────────────────────────────
+
 st.markdown("""
 <style>
-/* ── variáveis de cor ── */
-:root {
-    --accent:      #eab308;
-    --accent-fg:   #0f172a;
-    --sidebar-bg:  #0f172a;
-    --sidebar-fg:  #e2e8f0;
-    --surface:     #ffffff;
-    --muted:       #64748b;
-    --border:      #e2e8f0;
-    --success:     #22c55e;
-    --destructive: #ef4444;
+
+/* =========================================================
+   CONFIG GERAL
+========================================================= */
+
+html, body, [class*="css"] {
+    font-family: "Inter", sans-serif;
 }
 
-/* ── topbar ── */
-header[data-testid="stHeader"] { display: none !important; }
+/* =========================================================
+   SIDEBAR BASE
+========================================================= */
 
-/* ── sidebar ── */
-[data-testid="stSidebar"] {
-    background: var(--sidebar-bg) !important;
-    border-right: 1px solid #1e293b;
-}
-[data-testid="stSidebar"] * { color: var(--sidebar-fg) !important; }
-[data-testid="stSidebar"] .nav-link-selected { background: var(--accent) !important; color: var(--accent-fg) !important; }
-
-/* ── brand bar no topo da sidebar ── */
-.brand-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 16px 10px;
-    border-bottom: 1px solid #1e293b;
-    margin-bottom: 4px;
-}
-.brand-icon {
-    width: 36px; height: 36px;
-    border-radius: 6px;
-    background: linear-gradient(135deg, var(--accent), #ca8a04);
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 18px;
-    color: var(--accent-fg);
-    flex-shrink: 0;
-}
-.brand-text { line-height: 1.25; }
-.brand-text .name  { font-size: 0.8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent) !important; }
-.brand-text .sub   { font-size: 0.65rem; color: #94a3b8 !important; }
-
-/* ── topbar fake ── */
-.topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 20px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 18px;
-}
-.topbar-left  { font-size: .85rem; font-weight: 600; color: #0f172a; }
-.topbar-right { font-size: .75rem; color: var(--muted); font-family: monospace; }
-
-/* ── cards de métrica ── */
-.metric-card {
-    background: linear-gradient(135deg, #0f172a, #1e293b);
-    padding: 18px 20px;
-    border-radius: 14px;
-    color: white;
-    box-shadow: 0 4px 16px rgba(0,0,0,.18);
-    border: 1px solid rgba(255,255,255,.07);
-    min-height: 108px;
-}
-.metric-card .mc-label { margin: 0; font-size: .82rem; color: #94a3b8; font-weight: 600; }
-.metric-card .mc-value { margin: 8px 0 0; font-size: 2.1rem; font-weight: 900; color: #ffffff; line-height: 1; }
-.metric-card .mc-icon  { font-size: 1.4rem; float: right; opacity: .5; }
-
-/* ── status badges ── */
-.badge {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 99px;
-    font-size: .72rem;
-    font-weight: 700;
-    letter-spacing: .04em;
-}
-.badge-green  { background:#dcfce7; color:#15803d; }
-.badge-yellow { background:#fef9c3; color:#854d0e; }
-.badge-red    { background:#fee2e2; color:#991b1b; }
-.badge-gray   { background:#f1f5f9; color:#475569; }
-.badge-blue   { background:#dbeafe; color:#1d4ed8; }
-
-/* ── section box ── */
-.section-box {
-    background: #f8fafc;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px;
-    margin-bottom: 14px;
+section[data-testid="stSidebar"]{
+    background:#0f172a !important;
+    border-right:1px solid #1e293b;
+    min-width:260px !important;
+    max-width:260px !important;
+    transition:all .25s ease;
 }
 
-/* ── footer ── */
-.footer-bar {
-    margin-top: 32px;
-    padding: 10px 20px;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    display: flex; justify-content: space-between;
-    font-size: .7rem; color: var(--muted); font-family: monospace;
-}
-.footer-status { display: flex; align-items: center; gap: 6px; }
-.dot-green { width: 8px; height: 8px; border-radius: 50%; background: var(--success); display: inline-block; }
-
-/* ── form containers ── */
-div[data-testid="stForm"] {
-    background: #f8fafc;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px !important;
+section[data-testid="stSidebar"][aria-expanded="false"]{
+    min-width:0 !important;
+    max-width:0 !important;
 }
 
-/* ── dataframe ── */
-[data-testid="stDataFrame"] { border-radius: 10px; overflow: hidden; }
-
-/* ── buttons ── */
-.stButton > button {
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: .85rem;
-}
-.stButton > button[kind="primary"] { background: var(--accent) !important; color: var(--accent-fg) !important; border: none !important; }
-
-/* ── tabs ── */
-[data-testid="stTabs"] [role="tab"][aria-selected="true"] {
-    border-bottom: 2px solid var(--accent) !important;
-    color: #0f172a !important; font-weight: 700 !important;
+section[data-testid="stSidebar"] > div{
+    background:#0f172a;
+    padding-top:0.5rem;
 }
 
-/* scrollbar minimalista */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
-
-/* ── botão nativo de colapso da sidebar ── */
-/* Esconde o botão nativo do Streamlit */
-[data-testid="collapsedControl"] {
-    display: none !important;
-}
-button[kind="headerNoPadding"] {
-    display: none !important;
+section[data-testid="stSidebar"] .block-container{
+    padding-top:0.5rem !important;
+    padding-left:0 !important;
+    padding-right:0 !important;
 }
 
-/* ── toggle flutuante customizado ── */
-#sidebar-toggle-btn {
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 9999;
-    width: 22px;
-    height: 48px;
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-left: none;
-    border-radius: 0 8px 8px 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 13px;
-    transition: background 0.2s, color 0.2s;
-    box-shadow: 2px 0 8px rgba(0,0,0,.25);
+/* =========================================================
+   REMOVE BOTÃO NATIVO STREAMLIT
+========================================================= */
+
+[data-testid="stSidebarCollapseButton"]{
+    display:none !important;
 }
-#sidebar-toggle-btn:hover {
-    background: #334155;
-    color: #eab308;
+
+[data-testid="collapsedControl"]{
+    display:none !important;
 }
+
+button[kind="headerNoPadding"]{
+    display:none !important;
+}
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.brand-bar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:18px 16px;
+    border-bottom:1px solid #1e293b;
+    margin-bottom:10px;
+}
+
+.brand-icon{
+    width:42px;
+    height:42px;
+    border-radius:12px;
+    background:#eab308;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#0f172a;
+    font-size:22px;
+    font-weight:800;
+    flex-shrink:0;
+}
+
+.brand-text .name{
+    color:#f8fafc;
+    font-size:15px;
+    font-weight:700;
+    line-height:1.1;
+}
+
+.brand-text .sub{
+    color:#94a3b8;
+    font-size:11px;
+}
+
+/* =========================================================
+   OPTION MENU
+========================================================= */
+
+.nav-link{
+    border-radius:10px !important;
+    margin:2px 8px !important;
+    padding:10px 14px !important;
+    transition:all .15s ease;
+}
+
+.nav-link:hover{
+    background:#1e293b !important;
+    transform:translateX(2px);
+}
+
+.nav-link-selected{
+    background:#eab308 !important;
+    color:#0f172a !important;
+    font-weight:700 !important;
+    box-shadow:0 2px 10px rgba(234,179,8,.25);
+}
+
+.nav-link-selected i{
+    color:#0f172a !important;
+}
+
+.nav-link i{
+    font-size:15px !important;
+}
+
+/* =========================================================
+   TOPBAR
+========================================================= */
+
+.topbar{
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    height:58px;
+    background:#ffffff;
+    border-bottom:1px solid #e2e8f0;
+    z-index:999;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 22px 0 70px;
+    box-shadow:0 2px 10px rgba(0,0,0,.04);
+}
+
+.topbar-left{
+    font-size:15px;
+    font-weight:700;
+    color:#0f172a;
+}
+
+.topbar-right{
+    font-size:13px;
+    color:#64748b;
+    font-weight:600;
+}
+
+/* =========================================================
+   BOTÃO TOGGLE SIDEBAR
+========================================================= */
+
+#sb-toggle{
+    position:fixed;
+    top:50%;
+    transform:translateY(-50%);
+    left:260px;
+    z-index:99999;
+    width:20px;
+    height:54px;
+    border-radius:0 10px 10px 0;
+    background:#1e293b;
+    border:1px solid #334155;
+    border-left:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    color:#94a3b8;
+    font-size:16px;
+    font-weight:700;
+    transition:all .2s ease;
+    box-shadow:2px 0 10px rgba(0,0,0,.25);
+}
+
+#sb-toggle:hover{
+    background:#334155;
+    color:#eab308;
+}
+
+body.sidebar-collapsed #sb-toggle{
+    left:0;
+}
+
+/* =========================================================
+   CONTAINER PRINCIPAL
+========================================================= */
+
+.main .block-container{
+    padding-top:80px !important;
+    padding-bottom:60px !important;
+}
+
+/* =========================================================
+   CARDS
+========================================================= */
+
+.metric-card{
+    background:#ffffff;
+    border:1px solid #e2e8f0;
+    border-radius:18px;
+    padding:20px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 2px 12px rgba(0,0,0,.04);
+    transition:all .2s ease;
+}
+
+.metric-card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 22px rgba(0,0,0,.08);
+}
+
+.mc-icon{
+    position:absolute;
+    top:16px;
+    right:16px;
+    font-size:22px;
+    opacity:.2;
+}
+
+.mc-label{
+    color:#64748b;
+    font-size:13px;
+    margin-bottom:8px;
+    font-weight:600;
+}
+
+.mc-value{
+    color:#0f172a;
+    font-size:30px;
+    font-weight:800;
+    margin:0;
+}
+
+/* =========================================================
+   SECTION BOX
+========================================================= */
+
+.section-box{
+    background:#ffffff;
+    border:1px solid #e2e8f0;
+    border-radius:16px;
+    padding:18px;
+    margin-top:10px;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.footer-bar{
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    height:38px;
+    background:#ffffff;
+    border-top:1px solid #e2e8f0;
+    z-index:999;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 18px;
+    font-size:12px;
+    color:#64748b;
+}
+
+.footer-status{
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+
+.dot-green{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#22c55e;
+}
+
+/* =========================================================
+   TABS
+========================================================= */
+
+.stTabs [data-baseweb="tab-list"]{
+    gap:8px;
+}
+
+.stTabs [data-baseweb="tab"]{
+    border-radius:10px;
+    padding:10px 16px;
+    background:#f1f5f9;
+}
+
+.stTabs [aria-selected="true"]{
+    background:#eab308 !important;
+    color:#0f172a !important;
+}
+
+/* =========================================================
+   DATAFRAME
+========================================================= */
+
+[data-testid="stDataFrame"]{
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid #e2e8f0;
+}
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+.stTextInput input,
+.stTextArea textarea,
+.stSelectbox div[data-baseweb="select"]{
+    border-radius:10px !important;
+}
+
+/* =========================================================
+   RESPONSIVO
+========================================================= */
+
+@media (max-width: 768px){
+
+    section[data-testid="stSidebar"]{
+        min-width:240px !important;
+        max-width:240px !important;
+    }
+
+    #sb-toggle{
+        left:240px;
+    }
+
+    .topbar{
+        padding-left:20px;
+        height:auto;
+        min-height:58px;
+        flex-direction:column;
+        align-items:flex-start;
+        justify-content:center;
+        gap:2px;
+    }
+
+    .topbar-left{
+        font-size:14px;
+    }
+
+    .topbar-right{
+        font-size:11px;
+    }
+
+    .footer-bar{
+        flex-direction:column;
+        justify-content:center;
+        height:auto;
+        padding:6px;
+        gap:4px;
+        text-align:center;
+    }
+
+    .metric-card{
+        padding:16px;
+    }
+
+    .mc-value{
+        font-size:24px;
+    }
+}
+
 </style>
+
+<div id="sb-toggle">❮</div>
+
+<script>
+const btn = window.parent.document.getElementById('sb-toggle');
+
+btn.onclick = () => {
+
+    const sidebar = window.parent.document.querySelector(
+        'section[data-testid="stSidebar"]'
+    );
+
+    if(sidebar.getAttribute("aria-expanded") === "true"){
+
+        sidebar.setAttribute("aria-expanded","false");
+        document.body.classList.add("sidebar-collapsed");
+        btn.innerHTML = "❯";
+
+    } else {
+
+        sidebar.setAttribute("aria-expanded","true");
+        document.body.classList.remove("sidebar-collapsed");
+        btn.innerHTML = "❮";
+    }
+};
+</script>
+
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────
