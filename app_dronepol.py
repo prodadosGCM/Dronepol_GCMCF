@@ -167,39 +167,18 @@ div[data-testid="stForm"] {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
 
-/* ── botão nativo de colapso da sidebar ── */
-/* Esconde o botão nativo do Streamlit */
+/* ── botão nativo de colapso — mantém visível mas estilizado ── */
+[data-testid="stSidebarCollapseButton"] button,
 [data-testid="collapsedControl"] {
-    display: none !important;
+    background: #1e293b !important;
+    color: #94a3b8 !important;
+    border: 1px solid #334155 !important;
+    border-radius: 0 8px 8px 0 !important;
 }
-button[kind="headerNoPadding"] {
-    display: none !important;
-}
-
-/* ── toggle flutuante customizado ── */
-#sidebar-toggle-btn {
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 9999;
-    width: 22px;
-    height: 48px;
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-left: none;
-    border-radius: 0 8px 8px 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 13px;
-    transition: background 0.2s, color 0.2s;
-    box-shadow: 2px 0 8px rgba(0,0,0,.25);
-}
-#sidebar-toggle-btn:hover {
-    background: #334155;
-    color: #eab308;
+[data-testid="stSidebarCollapseButton"] button:hover,
+[data-testid="collapsedControl"]:hover {
+    background: #334155 !important;
+    color: #eab308 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -353,20 +332,35 @@ def conectar_planilha():
         st.error(f"Erro Google Sheets: {e}")
         st.stop()
 
-def obter_aba(nome):
+# Cache de abas — lazy: só abre/cria quando primeira vez usada
+_sheets_cache: dict = {}
+
+def obter_aba(nome: str):
+    """Retorna a worksheet, criando-a se não existir. Usa cache em memória."""
+    if nome in _sheets_cache:
+        return _sheets_cache[nome]
     p = conectar_planilha()
     try:
-        return p.worksheet(nome)
-    except:
-        aba = p.add_worksheet(title=nome, rows=3000, cols=max(len(ABAS[nome]),10))
+        aba = p.worksheet(nome)
+    except Exception:
+        import time as _t
+        _t.sleep(2)          # respeita rate-limit antes de criar
+        aba = p.add_worksheet(title=nome, rows=3000, cols=max(len(ABAS[nome]), 10))
+        _t.sleep(1)
         aba.append_row(ABAS[nome])
-        return aba
+    _sheets_cache[nome] = aba
+    return aba
 
-SHEETS = {n: obter_aba(n) for n in ABAS}
+# Classe para manter a sintaxe SHEETS["aba"] funcionando
+class _SheetsProxy:
+    def __getitem__(self, nome):
+        return obter_aba(nome)
+
+SHEETS = _SheetsProxy()
 
 @st.cache_data(ttl=60)
 def carregar_aba(nome):
-    df = pd.DataFrame(SHEETS[nome].get_all_records())
+    df = pd.DataFrame(obter_aba(nome).get_all_records())
     if not df.empty: df.columns = df.columns.str.strip().str.lower()
     return df
 
@@ -374,23 +368,33 @@ def limpar_cache(): carregar_aba.clear()
 
 def registrar_log(usuario, acao, detalhes=""):
     d, h = agora_str()
-    SHEETS["log_auditoria"].append_row([d, h, str(usuario).upper(), str(acao).upper(), str(detalhes).upper()])
+    obter_aba("log_auditoria").append_row([d, h, str(usuario).upper(), str(acao).upper(), str(detalhes).upper()])
     limpar_cache()
 
-# bootstrap admin
+# bootstrap admin — executado apenas uma vez por sessão
 def bootstrap_admin():
-    df = pd.DataFrame(SHEETS["usuarios"].get_all_records())
-    if df.empty:
-        SHEETS["usuarios"].append_row([1,"admin","admin","ADMINISTRADOR","","",make_hashes("admin123"),1,STATUS_ATIVO])
-        return
-    df.columns = df.columns.str.strip().str.lower()
-    existe = not df[(df["tipo_usuario"].str.lower()=="admin")&(df["login"].str.lower()=="admin")&(df["status"].str.upper()==STATUS_ATIVO)].empty
-    if not existe:
-        ids = pd.to_numeric(df.get("id",pd.Series(dtype=float)),errors="coerce").dropna()
-        nid = int(ids.max())+1 if not ids.empty else 1
-        SHEETS["usuarios"].append_row([nid,"admin","admin","ADMINISTRADOR","","",make_hashes("admin123"),1,STATUS_ATIVO])
+    try:
+        aba = obter_aba("usuarios")
+        df = pd.DataFrame(aba.get_all_records())
+        if df.empty:
+            aba.append_row([1,"admin","admin","ADMINISTRADOR","","",make_hashes("admin123"),1,STATUS_ATIVO])
+            return
+        df.columns = df.columns.str.strip().str.lower()
+        existe = not df[
+            (df["tipo_usuario"].str.lower()=="admin") &
+            (df["login"].str.lower()=="admin") &
+            (df["status"].str.upper()==STATUS_ATIVO)
+        ].empty
+        if not existe:
+            ids = pd.to_numeric(df.get("id", pd.Series(dtype=float)), errors="coerce").dropna()
+            nid = int(ids.max()) + 1 if not ids.empty else 1
+            aba.append_row([nid,"admin","admin","ADMINISTRADOR","","",make_hashes("admin123"),1,STATUS_ATIVO])
+    except Exception as e:
+        st.warning(f"Bootstrap admin: {e}")
 
-bootstrap_admin()
+if "bootstrap_done" not in st.session_state:
+    bootstrap_admin()
+    st.session_state["bootstrap_done"] = True
 
 # ─────────────────────────────────────────
 # USUÁRIOS
@@ -530,55 +534,12 @@ def topbar():
     nome = st.session_state.get("nome_usuario","")
     d, h = agora_str()
     perfil_label = {"admin":"Administrador","gestor":"Gestor","agente":"Piloto/Agente"}.get(perfil,perfil.upper())
-    # Botão toggle e JS para controlar colapso nativo da sidebar
     st.markdown(f"""
     <div class="topbar">
         <span class="topbar-left">&#x1F694; SIG-GCM &nbsp;&middot;&nbsp; Cabo Frio / RJ</span>
         <span class="topbar-right">{nome} &nbsp;&middot;&nbsp; {perfil_label} &nbsp;&middot;&nbsp; {d} {h}</span>
-    </div>
-    <div id="sb-toggle" title="Recolher / Expandir menu" onclick="sbToggle()" style="
-        position:fixed;top:50%;transform:translateY(-50%);left:0;z-index:9999;
-        width:22px;height:48px;background:#1e293b;border:1px solid #334155;border-left:none;
-        border-radius:0 8px 8px 0;cursor:pointer;display:flex;align-items:center;
-        justify-content:center;color:#94a3b8;font-size:14px;font-weight:700;
-        box-shadow:2px 0 8px rgba(0,0,0,.3);user-select:none;
-        transition:background .15s,color .15s;">&#8250;</div>
-    <script>
-    (function(){{
-        function findBtn(){{
-            var pd = window.parent.document;
-            return pd.querySelector('[data-testid="stSidebarCollapseButton"] button') ||
-                   pd.querySelector('button[aria-label="Close sidebar"]') ||
-                   pd.querySelector('button[aria-label="Open sidebar"]') ||
-                   pd.querySelector('[data-testid="collapsedControl"]');
-        }}
-        function isCollapsed(){{
-            var sb = window.parent.document.querySelector('[data-testid="stSidebar"]');
-            if(!sb) return false;
-            var w = sb.getBoundingClientRect().width;
-            return w < 50;
-        }}
-        function syncIcon(){{
-            var el = document.getElementById('sb-toggle');
-            if(!el) return;
-            if(isCollapsed()){{ el.innerHTML='&#8250;'; el.style.left='0'; }}
-            else {{ el.innerHTML='&#8249;'; el.style.left=''; }}
-        }}
-        window.sbToggle = function(){{
-            var btn = findBtn();
-            if(btn){{ btn.click(); setTimeout(syncIcon,350); }}
-        }};
-        var hov = document.getElementById('sb-toggle');
-        if(hov){{
-            hov.onmouseenter=function(){{this.style.background='#334155';this.style.color='#eab308';}};
-            hov.onmouseleave=function(){{this.style.background='#1e293b';this.style.color='#94a3b8';}};
-        }}
-        setTimeout(syncIcon, 400);
-        // Recheck após renders do Streamlit
-        setInterval(syncIcon, 1500);
-    }})();
-    </script>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
+
 
 def footer():
     st.markdown("""
