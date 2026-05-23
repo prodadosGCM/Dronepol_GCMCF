@@ -26,6 +26,7 @@ st.set_page_config(
 )
 
 
+
 st.markdown("""
 <style>
 
@@ -49,16 +50,19 @@ section[data-testid="stSidebar"]{
     transition:all .25s ease;
 }
 
+/* sidebar recolhida */
 section[data-testid="stSidebar"][aria-expanded="false"]{
     min-width:0 !important;
     max-width:0 !important;
 }
 
+/* conteúdo interno */
 section[data-testid="stSidebar"] > div{
     background:#0f172a;
     padding-top:0.5rem;
 }
 
+/* remove espaços laterais */
 section[data-testid="stSidebar"] .block-container{
     padding-top:0.5rem !important;
     padding-left:0 !important;
@@ -66,7 +70,7 @@ section[data-testid="stSidebar"] .block-container{
 }
 
 /* =========================================================
-   REMOVE BOTÃO NATIVO STREAMLIT
+   BOTÃO ORIGINAL STREAMLIT
 ========================================================= */
 
 [data-testid="stSidebarCollapseButton"]{
@@ -74,10 +78,6 @@ section[data-testid="stSidebar"] .block-container{
 }
 
 [data-testid="collapsedControl"]{
-    display:none !important;
-}
-
-button[kind="headerNoPadding"]{
     display:none !important;
 }
 
@@ -184,7 +184,7 @@ button[kind="headerNoPadding"]{
 }
 
 /* =========================================================
-   BOTÃO TOGGLE SIDEBAR
+   BOTÃO TOGGLE LATERAL
 ========================================================= */
 
 #sb-toggle{
@@ -215,6 +215,7 @@ button[kind="headerNoPadding"]{
     color:#eab308;
 }
 
+/* quando sidebar recolhida */
 body.sidebar-collapsed #sb-toggle{
     left:0;
 }
@@ -407,33 +408,185 @@ body.sidebar-collapsed #sb-toggle{
 }
 
 </style>
+""", unsafe_allow_html=True)
 
-<div id="sb-toggle">❮</div>
+# ─────────────────────────────────────────
+# TEMA / CSS  (espelha o visual React)
+# ─────────────────────────────────────────
+st.markdown("""
+<style>
+/* ── variáveis de cor ── */
+:root {
+    --accent:      #eab308;
+    --accent-fg:   #0f172a;
+    --sidebar-bg:  #0f172a;
+    --sidebar-fg:  #e2e8f0;
+    --surface:     #ffffff;
+    --muted:       #64748b;
+    --border:      #e2e8f0;
+    --success:     #22c55e;
+    --destructive: #ef4444;
+}
 
-<script>
-const btn = window.parent.document.getElementById('sb-toggle');
+/* ── topbar ── */
+header[data-testid="stHeader"] { display: none !important; }
 
-btn.onclick = () => {
+/* ── sidebar ── */
+[data-testid="stSidebar"] {
+    background: var(--sidebar-bg) !important;
+    border-right: 1px solid #1e293b;
+}
+[data-testid="stSidebar"] * { color: var(--sidebar-fg) !important; }
+[data-testid="stSidebar"] .nav-link-selected { background: var(--accent) !important; color: var(--accent-fg) !important; }
 
-    const sidebar = window.parent.document.querySelector(
-        'section[data-testid="stSidebar"]'
-    );
+/* ── brand bar no topo da sidebar ── */
+.brand-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid #1e293b;
+    margin-bottom: 4px;
+}
+.brand-icon {
+    width: 36px; height: 36px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--accent), #ca8a04);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 18px;
+    color: var(--accent-fg);
+    flex-shrink: 0;
+}
+.brand-text { line-height: 1.25; }
+.brand-text .name  { font-size: 0.8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent) !important; }
+.brand-text .sub   { font-size: 0.65rem; color: #94a3b8 !important; }
 
-    if(sidebar.getAttribute("aria-expanded") === "true"){
+/* ── topbar fake ── */
+.topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 18px;
+}
+.topbar-left  { font-size: .85rem; font-weight: 600; color: #0f172a; }
+.topbar-right { font-size: .75rem; color: var(--muted); font-family: monospace; }
 
-        sidebar.setAttribute("aria-expanded","false");
-        document.body.classList.add("sidebar-collapsed");
-        btn.innerHTML = "❯";
+/* ── cards de métrica ── */
+.metric-card {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    padding: 18px 20px;
+    border-radius: 14px;
+    color: white;
+    box-shadow: 0 4px 16px rgba(0,0,0,.18);
+    border: 1px solid rgba(255,255,255,.07);
+    min-height: 108px;
+}
+.metric-card .mc-label { margin: 0; font-size: .82rem; color: #94a3b8; font-weight: 600; }
+.metric-card .mc-value { margin: 8px 0 0; font-size: 2.1rem; font-weight: 900; color: #ffffff; line-height: 1; }
+.metric-card .mc-icon  { font-size: 1.4rem; float: right; opacity: .5; }
 
-    } else {
+/* ── status badges ── */
+.badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 99px;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+.badge-green  { background:#dcfce7; color:#15803d; }
+.badge-yellow { background:#fef9c3; color:#854d0e; }
+.badge-red    { background:#fee2e2; color:#991b1b; }
+.badge-gray   { background:#f1f5f9; color:#475569; }
+.badge-blue   { background:#dbeafe; color:#1d4ed8; }
 
-        sidebar.setAttribute("aria-expanded","true");
-        document.body.classList.remove("sidebar-collapsed");
-        btn.innerHTML = "❮";
-    }
-};
-</script>
+/* ── section box ── */
+.section-box {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 14px;
+}
 
+/* ── footer ── */
+.footer-bar {
+    margin-top: 32px;
+    padding: 10px 20px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between;
+    font-size: .7rem; color: var(--muted); font-family: monospace;
+}
+.footer-status { display: flex; align-items: center; gap: 6px; }
+.dot-green { width: 8px; height: 8px; border-radius: 50%; background: var(--success); display: inline-block; }
+
+/* ── form containers ── */
+div[data-testid="stForm"] {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px !important;
+}
+
+/* ── dataframe ── */
+[data-testid="stDataFrame"] { border-radius: 10px; overflow: hidden; }
+
+/* ── buttons ── */
+.stButton > button {
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: .85rem;
+}
+.stButton > button[kind="primary"] { background: var(--accent) !important; color: var(--accent-fg) !important; border: none !important; }
+
+/* ── tabs ── */
+[data-testid="stTabs"] [role="tab"][aria-selected="true"] {
+    border-bottom: 2px solid var(--accent) !important;
+    color: #0f172a !important; font-weight: 700 !important;
+}
+
+/* scrollbar minimalista */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+/* ── botão nativo de colapso da sidebar ── */
+/* Esconde o botão nativo do Streamlit */
+[data-testid="collapsedControl"] {
+    display: none !important;
+}
+button[kind="headerNoPadding"] {
+    display: none !important;
+}
+
+/* ── toggle flutuante customizado ── */
+#sidebar-toggle-btn {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 9999;
+    width: 22px;
+    height: 48px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 13px;
+    transition: background 0.2s, color 0.2s;
+    box-shadow: 2px 0 8px rgba(0,0,0,.25);
+}
+#sidebar-toggle-btn:hover {
+    background: #334155;
+    color: #eab308;
+}
+</style>
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────
