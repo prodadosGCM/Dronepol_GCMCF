@@ -432,59 +432,123 @@ if st.session_state.get("primeiro_acesso"):
                 st.success("Senha updated!"); time_mod.sleep(1); st.rerun()
     st.stop()
 
+
 # ═══════════════════════════════════════════════════════
-#  SIDEBAR / MENU
+#  CONTROLE DO ESTADO DO MENU (MINI / EXPANDIDO)
 # ═══════════════════════════════════════════════════════
+if "menu_expandido" not in st.session_state:
+    st.session_state["menu_expandido"] = True  # Começa aberto
+
+# CSS Injetado para criar a transição suave e o comportamento Slim
+st.markdown("""
+<style>
+/* Remove o botão padrão de colapsar do Streamlit para não chocar com o nosso */
+[data-testid="stSidebarCollapseButton"] { display: none !important; }
+
+/* Ajusta o padding interno da sidebar do Streamlit */
+[data-testid="stSidebarUserContent"] { padding-top: 1rem !important; }
+
+/* Estilização dos itens do menu customizado */
+.menu-container { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.menu-item {
+    display: flex; align-items: center; padding: 10px 12px;
+    border-radius: 8px; color: #e2e8f0 !important;
+    text-decoration: none; background: transparent; border: none;
+    width: 100%; text-align: left; cursor: pointer; transition: all 0.2s ease;
+}
+.menu-item:hover { background-color: #1e293b; color: #eab308 !important; }
+.menu-item-active { background-color: #eab308 !important; color: #0f172a !important; font-weight: 700; }
+.menu-icon { font-size: 18px; min-width: 30px; display: inline-block; text-align: center; }
+.menu-text { font-size: 14px; white-space: nowrap; transition: opacity 0.2s; }
+
+/* Botão de alternar (Hambúrguer / Seta) */
+.toggle-btn {
+    background: #1e293b; color: #94a3b8; border: 1px solid #334155;
+    padding: 6px; border-radius: 6px; cursor: pointer; margin-bottom: 15px;
+    width: 100%; text-align: center; font-weight: bold;
+}
+.toggle-btn:hover { color: #eab308; background: #334155; }
+</style>
+""", unsafe_allow_html=True)
+
+# Define as opções de menu com base no perfil
+perfil = st.session_state["tipo_usuario"]
+is_admin = perfil in ("admin", "gestor")
+
+if is_admin:
+    opcoes_menu = [
+        {"label": "Dashboard", "icon": "📊"},
+        {"label": "Ocorrências", "icon": "🚨"},
+        {"label": "Central 153", "icon": "📞"},
+        {"label": "Despacho", "icon": "📡"},
+        {"label": "Monitoramento", "icon": "📷"},
+        {"label": "DRONEPOL", "icon": "🎮"},
+        {"label": "Fiscalização", "icon": "📢"},
+        {"label": "Agentes", "icon": "👥"},
+        {"label": "Viaturas", "icon": "🚗"},
+        {"label": "Minha Conta", "icon": "👤"},
+        {"label": "Sair", "icon": "🚪"}
+    ]
+else:
+    opcoes_menu = [
+        {"label": "Dashboard", "icon": "📊"},
+        {"label": "DRONEPOL", "icon": "🎮"},
+        {"label": "Minha Conta", "icon": "👤"},
+        {"label": "Sair", "icon": "🚪"}
+    ]
+
+# Se não houver menu selecionado na sessão, define o padrão
+if "menu_selecionado" not in st.session_state:
+    st.session_state["menu_selecionado"] = "Dashboard"
+
+# Renderização do Menu Lateral Customizado
 with st.sidebar:
-    st.markdown("""
-    <div class="brand-bar">
-        <div class="brand-icon">G</div>
-        <div class="brand-text">
-            <div class="name">SIG-GCM</div>
-            <div class="sub">Cabo Frio / RJ</div>
-        </div>
-    </div>""", unsafe_allow_html=True)
+    # Botão de gatilho para expandir/recolher
+    texto_botao = "◀ Recolher" if st.session_state["menu_expandido"] else "▶"
+    if st.button(texto_botao, key="toggle_sidebar_custom", use_container_width=True):
+        st.session_state["menu_expandido"] = not st.session_state["menu_expandido"]
+        st.rerun()
+        
+    st.markdown("---")
+    
+    # Renderiza os itens
+    for item in opcoes_menu:
+        # Define se o item está ativo
+        classe_ativo = "menu-item-active" if st.session_state["menu_selecionado"] == item["label"] else ""
+        
+        # Se estiver expandido, mostra Ícone + Texto. Se estiver colapsado, mostra apenas o Ícone.
+        if st.session_state["menu_expandido"]:
+            html_item = f"""
+            <div class="menu-icon">{item['icon']}</div>
+            <div class="menu-text">{item['label']}</div>
+            """
+        else:
+            html_item = f"<div class="menu-icon" title="{item['label']}">{item['icon']}</div>"
+            
+        # Cria um botão invisível nativo por cima do design HTML para capturar o clique do usuário de forma leve
+        if st.button(item["label"] if st.session_state["menu_expandido"] else item["icon"], 
+                     key=f"btn_{item['label']}", 
+                     use_container_width=True,
+                     type="primary" if st.session_state["menu_selecionado"] == item["label"] else "secondary"):
+            st.session_state["menu_selecionado"] = item["label"]
+            st.rerun()
 
-    perfil = st.session_state["tipo_usuario"]
-    is_admin = perfil in ("admin","gestor")
+    # Redireciona a variável antiga 'menu' para a nova estrutura baseada em estado
+    menu = st.session_state["menu_selecionado"]
 
-    if is_admin:
-        menu = option_menu(
-            menu_title=None,
-            options=["Dashboard","Ocorrências","Central 153","Despacho","Monitoramento","DRONEPOL","Fiscalização","Agentes","Viaturas","Minha Conta","Sair"],
-            icons=["speedometer2","clipboard-data","telephone","broadcast","camera-video","controller","megaphone","people","truck","person-circle","box-arrow-right"],
-            default_index=0,
-            styles={
-                "container":{"padding":"4px 8px","background-color":"#0f172a"},
-                "icon":{"color":"#94a3b8","font-size":"15px"},
-                "nav-link":{"font-size":"13px","color":"#e2e8f0","padding":"9px 12px","border-radius":"8px","margin":"1px 0","--hover-color":"#1e293b"},
-                "nav-link-selected":{"background-color":"#eab308","color":"#0f172a","font-weight":"700"},
-            }
-        )
-    else:
-        menu = option_menu(
-            menu_title=None,
-            options=["Dashboard","DRONEPOL","Minha Conta","Sair"],
-            icons=["speedometer2","controller","person-circle","box-arrow-right"],
-            default_index=0,
-            styles={
-                "container":{"padding":"4px 8px","background-color":"#0f172a"},
-                "icon":{"color":"#94a3b8","font-size":"15px"},
-                "nav-link":{"font-size":"13px","color":"#e2e8f0","padding":"9px 12px","border-radius":"8px","margin":"1px 0","--hover-color":"#1e293b"},
-                "nav-link-selected":{"background-color":"#eab308","color":"#0f172a","font-weight":"700"},
-            }
-        )
+    if st.session_state["menu_expandido"]:
+        st.markdown(f"""
+        <div style='padding:12px 12px 8px; border-top:1px solid #1e293b; margin-top:16px'>
+            <div style='font-size:.75rem; color:#94a3b8'>Conectado como</div>
+            <div style='font-size:.85rem; font-weight:700; color:#e2e8f0; margin-top:2px'>{st.session_state["nome_usuario"]}</div>
+            <div style='font-size:.68rem; color:#64748b; font-family:monospace'>{perfil.upper()}</div>
+        </div>""", unsafe_allow_html=True)
 
-    st.markdown(f"""
-    <div style='padding:12px 12px 8px;border-top:1px solid #1e293b;margin-top:8px'>
-        <div style='font-size:.75rem;color:#94a3b8'>Conectado como</div>
-        <div style='font-size:.85rem;font-weight:700;color:#e2e8f0;margin-top:2px'>{st.session_state["nome_usuario"]}</div>
-        <div style='font-size:.68rem;color:#64748b;font-family:monospace'>{perfil.upper()}</div>
-    </div>""", unsafe_allow_html=True)
-
+# Executa a ação de logout caso o botão Sair seja pressionado
 if menu == "Sair":
-    for k in ["logado","usuario_id","tipo_usuario","nome_usuario","login_usuario","primeiro_acesso"]:
-        st.session_state[k] = False if k in ("logado","primeiro_acesso") else ""
+    for k in ["logado","usuario_id","tipo_usuario","nome_usuario","login_usuario","primeiro_acesso", "menu_selecionado"]:
+        if k in st.session_state:
+            st.session_state[k] = False if k in ("logado","primeiro_acesso") else ""
     st.rerun()
 
 topbar()
