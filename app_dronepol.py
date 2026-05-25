@@ -513,9 +513,6 @@ with st.sidebar:
     
     # Renderiza os itens
     for item in opcoes_menu:
-        # Define se o item está ativo
-        classe_ativo = "menu-item-active" if st.session_state["menu_selecionado"] == item["label"] else ""
-        
         # Se estiver expandido, mostra Ícone + Texto. Se estiver colapsado, mostra apenas o Ícone.
         if st.session_state["menu_expandido"]:
             html_item = f"""
@@ -523,9 +520,10 @@ with st.sidebar:
             <div class="menu-text">{item['label']}</div>
             """
         else:
-            html_item = f"<div class="menu-icon" title="{item['label']}">{item['icon']}</div>"
+            # CORREÇÃO AQUI: Alternância de aspas simples e duplas para evitar erro de sintaxe
+            html_item = f'<div class="menu-icon" title="{item["label"]}">{item["icon"]}</div>'
             
-        # Cria um botão invisível nativo por cima do design HTML para capturar o clique do usuário de forma leve
+        # Cria o botão com base no estado atual
         if st.button(item["label"] if st.session_state["menu_expandido"] else item["icon"], 
                      key=f"btn_{item['label']}", 
                      use_container_width=True,
