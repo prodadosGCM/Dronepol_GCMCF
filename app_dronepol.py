@@ -42,6 +42,11 @@ st.markdown("""
     --destructive: #ef4444;
 }
 
+/* Esconde o botão específico do header */
+button[data-testid="stBaseButton-headerNoPadding"] {
+    display: none !important;
+}            
+
 header[data-testid="stHeader"] { display: none !important; }
 
 [data-testid="stSidebar"] {
