@@ -166,6 +166,20 @@ div[data-testid="stForm"] {
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+/* ── botão nativo de colapso — mantém visível mas estilizado ── */
+[data-testid="stSidebarCollapseButton"] button,
+[data-testid="collapsedControl"] {
+    background: #1e293b !important;
+    color: #94a3b8 !important;
+    border: 1px solid #334155 !important;
+    border-radius: 0 8px 8px 0 !important;
+}
+[data-testid="stSidebarCollapseButton"] button:hover,
+[data-testid="collapsedControl"]:hover {
+    background: #334155 !important;
+    color: #eab308 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -497,9 +511,10 @@ def topbar():
     perfil_label = {"admin":"Administrador","gestor":"Gestor","agente":"Piloto/Agente"}.get(perfil,perfil.upper())
     st.markdown(f"""
     <div class="topbar">
-        <span class="topbar-left">🚔 SIG-GCM &nbsp;·&nbsp; Cabo Frio / RJ</span>
-        <span class="topbar-right">{nome} &nbsp;·&nbsp; {perfil_label} &nbsp;·&nbsp; {d} {h}</span>
+        <span class="topbar-left">&#x1F694; SIG-GCM &nbsp;&middot;&nbsp; Cabo Frio / RJ</span>
+        <span class="topbar-right">{nome} &nbsp;&middot;&nbsp; {perfil_label} &nbsp;&middot;&nbsp; {d} {h}</span>
     </div>""", unsafe_allow_html=True)
+
 
 def footer():
     st.markdown("""
