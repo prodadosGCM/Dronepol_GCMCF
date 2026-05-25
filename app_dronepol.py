@@ -432,7 +432,62 @@ if st.session_state.get("primeiro_acesso"):
                 st.success("Senha updated!"); time_mod.sleep(1); st.rerun()
     st.stop()
 
+# ═══════════════════════════════════════════════════════
+#  SIDEBAR / MENU
+# ═══════════════════════════════════════════════════════
+with st.sidebar:
+    st.markdown("""
+    <div class="brand-bar">
+        <div class="brand-icon">G</div>
+        <div class="brand-text">
+            <div class="name">SIG-GCM</div>
+            <div class="sub">Cabo Frio / RJ</div>
+        </div>
+    </div>""", unsafe_allow_html=True)
 
+    perfil = st.session_state["tipo_usuario"]
+    is_admin = perfil in ("admin","gestor")
+
+    if is_admin:
+        menu = option_menu(
+            menu_title=None,
+            options=["Dashboard","Ocorrências","Central 153","Despacho","Monitoramento","DRONEPOL","Fiscalização","Agentes","Viaturas","Minha Conta","Sair"],
+            icons=["speedometer2","clipboard-data","telephone","broadcast","camera-video","controller","megaphone","people","truck","person-circle","box-arrow-right"],
+            default_index=0,
+            styles={
+                "container":{"padding":"4px 8px","background-color":"#0f172a"},
+                "icon":{"color":"#94a3b8","font-size":"15px"},
+                "nav-link":{"font-size":"13px","color":"#e2e8f0","padding":"9px 12px","border-radius":"8px","margin":"1px 0","--hover-color":"#1e293b"},
+                "nav-link-selected":{"background-color":"#eab308","color":"#0f172a","font-weight":"700"},
+            }
+        )
+    else:
+        menu = option_menu(
+            menu_title=None,
+            options=["Dashboard","DRONEPOL","Minha Conta","Sair"],
+            icons=["speedometer2","controller","person-circle","box-arrow-right"],
+            default_index=0,
+            styles={
+                "container":{"padding":"4px 8px","background-color":"#0f172a"},
+                "icon":{"color":"#94a3b8","font-size":"15px"},
+                "nav-link":{"font-size":"13px","color":"#e2e8f0","padding":"9px 12px","border-radius":"8px","margin":"1px 0","--hover-color":"#1e293b"},
+                "nav-link-selected":{"background-color":"#eab308","color":"#0f172a","font-weight":"700"},
+            }
+        )
+
+    st.markdown(f"""
+    <div style='padding:12px 12px 8px;border-top:1px solid #1e293b;margin-top:8px'>
+        <div style='font-size:.75rem;color:#94a3b8'>Conectado como</div>
+        <div style='font-size:.85rem;font-weight:700;color:#e2e8f0;margin-top:2px'>{st.session_state["nome_usuario"]}</div>
+        <div style='font-size:.68rem;color:#64748b;font-family:monospace'>{perfil.upper()}</div>
+    </div>""", unsafe_allow_html=True)
+
+if menu == "Sair":
+    for k in ["logado","usuario_id","tipo_usuario","nome_usuario","login_usuario","primeiro_acesso"]:
+        st.session_state[k] = False if k in ("logado","primeiro_acesso") else ""
+    st.rerun()
+
+topbar()
 
 # ═══════════════════════════════════════════════════════
 #  DASHBOARD
